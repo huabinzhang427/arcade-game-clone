@@ -1,3 +1,7 @@
+// 整个脚本都开启严格模式的语法
+"use strict";
+var TILE_WIDTH = 101,
+    TILE_HEIGHT = 83;
 // 这是我们的玩家要躲避的敌人 
 var Enemy = function(x, y, speed) {
     // 要应用到每个敌人的实例的变量写在这里
@@ -21,12 +25,11 @@ Enemy.prototype.update = function(dt) {
     this.dt = dt;
     var updatedX = this.x + this.speed * dt; // 更新的位置 = 当前位置 + 当前速度*时间间隔
     this.collision();
-    // 处理碰撞玩家的部分
-    if (this.x < 505) {
+    if (this.x < TILE_WIDTH * 5) {
         this.x = updatedX;
         return this.x;
     } else {
-        this.x = 0;
+        this.x = -TILE_WIDTH; // 将初始x坐标改为 负值，那样能使动画看起来更流畅，给人感觉小虫就是从左边画布爬出来的，而不是凭空产生的
         return this.x;
     }
 };
@@ -50,21 +53,35 @@ Enemy.prototype.render = function() {
 // 这个类需要一个 update() 函数， render() 函数和一个 handleInput()函数
 // Player 函数
 var Player = function() {
-    this.x = 202;
-    this.y = 394;
+    this.x = TILE_WIDTH * 2;
+    this.y = TILE_HEIGHT * 5 - 25;
     this.player = 'images/char-cat-girl.png';
 };
 
 Player.prototype.update = function() {
     // 过关条件
+    // 玩家获胜后出现相应的动画
     if (this.y < 40) {
-        this.reset();
+        // this.reset();
+        ctx.fillStyle = "gray";
+        ctx.globalAlpha = 0.75;
+        ctx.fillRect(0, 50, 505, 538);
+
+        ctx.font = "52pt Impact";
+        ctx.textAlign = "center";
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 3;
+        ctx.fillStyle = "black";
+        ctx.fillText("YOU WIN!", 252, 403);
+        ctx.strokeText("YOU WIN!", 252, 403);
+        ctx.textAlign = "center";
+        ctx.drawImage(Resources.get("images/Selector.png"), 252, 203);
     }
 };
 
 Player.prototype.reset = function() {
-    this.x = 202;
-    this.y = 394;
+    this.x = TILE_WIDTH * 2;
+    this.y = TILE_HEIGHT * 5 - 25;
 };
 
 Player.prototype.render = function() {
@@ -75,27 +92,27 @@ Player.prototype.handleInput = function(keyEvent) {
     this.keyEvent = keyEvent;
     if (keyEvent === 'left') {
         if (this.x != 0) {
-            var moveLeft = this.x - 101;
+            var moveLeft = this.x - TILE_WIDTH;
             this.x = moveLeft;
             return this.x;
         } else {
             return false;
         }
     } else if (keyEvent === 'up') {
-        var moveUp = this.y - 83;
+        var moveUp = this.y - TILE_HEIGHT;
         this.y = moveUp;
         return this.y;
     } else if (keyEvent === 'right') {
-        if (this.x != 404) {
-            var moveRight = this.x + 101;
+        if (this.x != TILE_WIDTH * 4) {
+            var moveRight = this.x + TILE_WIDTH;
             this.x = moveRight;
             return this.x;
         } else {
             return false;
         }
     } else if (keyEvent === 'down') {
-        if (this.y != 394) {
-            var moveDown = this.y + 83;
+        if (this.y != TILE_HEIGHT * 5 - 25) {
+            var moveDown = this.y + TILE_HEIGHT;
             this.y = moveDown;
             return this.y;
         } else {
@@ -105,12 +122,21 @@ Player.prototype.handleInput = function(keyEvent) {
 };
 
 // 现在实例化你的所有对象(游戏面板长505，宽606（-25开始），每个格子长101，宽83)
-var enemy1 = new Enemy(-150, 62, 150);
-var enemy2 = new Enemy(-100, 145, 220);
-var enemy3 = new Enemy(-200, 228, 110);
+
 // 把所有敌人的对象都放进一个叫 allEnemies 的数组里面
 var allEnemies = [];
-allEnemies.push(enemy1, enemy2, enemy3);
+// 创建小虫子重复性的操作我们可以运用 for循环 和 随机数 解决
+for (var i = 1; i < 4; i++) {
+    var enemy = new Enemy(-150, i * TILE_HEIGHT - 25, getRandom(3, 8) * 40);
+    allEnemies.push(enemy);
+}
+
+// 获取随机数
+function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min) + min); //向下取整产生一个随机数
+}
+
+
 // 把玩家对象放进一个叫 player 的变量里面
 var player = new Player();
 
